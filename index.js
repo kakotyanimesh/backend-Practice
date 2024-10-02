@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 const main = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI)
-        app.listen(port, () => console.log(`the app is running at https://animated-invention-7qqwx56pjwfpvw9-3000.app.github.dev`))
+        app.listen(port, () => console.log(`the app is running at http://localhost:${port}`))
 
     } catch (error) {
         console.log(`something went wrong while connecting with mongoDb server !! error : ${error.message}`);

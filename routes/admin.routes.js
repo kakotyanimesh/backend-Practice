@@ -4,14 +4,14 @@ const z = require('zod')
 const bcrypt = require('bcrypt')
 const { accessTokenAdmin, refreshTokenAdmin } = require('../utils/jwtToke')
 const { default: errorMap } = require('zod/locales/en.js')
-const { UserModel } = require('../model/user.model')
+const { CourseModel } = require('../model/course.model')
 const { AdminModel } = require('../model/admin.model')
 
 const adminRouter = Router()
 
 // signUp signIn 
 
-adminRouter.post('/singUp', async (req, res) => {
+adminRouter.post('/signUp', async (req, res) => {
     try {
         const signupObject = z.object({
             email : z.string().email({message : 'provide a valid email address'}),
@@ -29,7 +29,7 @@ adminRouter.post('/singUp', async (req, res) => {
         const parsedObject = signupObject.safeParse(req.body)
     
         if(!parsedObject.success) {
-            return res.status(403).json({
+            return res.status(400).json({
                 message : `validation failed, check provided data for following error : `,
                 error : parsedObject.error.errors
             })
@@ -51,17 +51,85 @@ adminRouter.post('/singUp', async (req, res) => {
         const accessToken = accessTokenAdmin(admin._id)
         const refreshToken = refreshTokenAdmin(admin._id)
     
-        res.status(200).json({
+        res.status(201).json({
             message : `admin created successfully`,
             accessToken,
             refreshToken
         })
     } catch (error) {
         console.log(error);
-        res.status(403).json({
+        res.status(500).json({
             message : `something went wrong while creating the admin ! error : ${error.message}`
         })
     }
+})
+
+
+adminRouter.post('/signin', async (req, res) => {
+    try {
+        const signinObject = z.object({
+            email : z.string().email({message: 'provide a valid email address'}),
+            password : z.string()
+                            .min(8, { message: 'Password must be at least 8 characters long.' })
+                            .max(20, { message: 'Password must not exceed 20 characters.' })
+                            .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter.' })
+                            .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter.' })
+                            .regex(/[\W_]/, { message: 'Password must contain at least one special character (e.g., !@#$%^&*()_+).' })
+                            .regex(/[0-9]/, { message: 'Password must contain at least one number.' }),
+        })
+    
+        const parsedObject = signinObject.safeParse(req.body)
+    
+        if(!parsedObject.success){
+            return res.status(400).json({
+                message : 'please provide valid credentials',
+                error : parsedObject.error.errors
+            })
+        }
+    
+        const { email, password } = parsedObject.data
+    
+        const admin = await AdminModel.findOne({email})
+    
+        if(!admin){
+            return res.status(401).json({
+                message : 'invalid email or password'
+            })
+        }
+    
+        const comparePassword = bcrypt.compare(password, admin.password)
+    
+        if(!comparePassword){
+            return res.status(401).json({
+                message : 'invalid email or password'
+            })
+        }
+    
+        const accessToken = accessTokenAdmin(admin._id)
+        const refreshToken = refreshTokenAdmin(admin._id)
+    
+        res.status(200).json({
+            message : 'admin signedin successfully',
+            accessToken,
+            refreshToken
+        })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message : `something went wrong while sign in ! error : ${error.message}`
+        })
+        
+    }
+    
+})
+
+const courseObject = z.object({
+    title : z.string().min(10, {message : 'Min 25 character must'}).max(100, { message : 'Max 50 is allowed for title'}),
+    description : z.string().min(30, { message : 'Min 30 char is must'}).max(300, { message : 'max 80 character is allowed in description'}),
+    price : z.number()
+})
+adminRouter.post('/createCourse', async (req, res) => {
+    
 })
 
 
