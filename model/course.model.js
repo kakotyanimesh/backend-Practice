@@ -15,8 +15,12 @@ const CourseSchema = new Schema({
         type : Number,
         required : true
     },
-    creatorId : ObjectId
-})
+    creatorId : {
+        type : ObjectId,
+        ref : 'Admin',
+        required : true
+    }
+}, { timestamps : true})
 
 const CourseModel = mongoose.model('Course', CourseSchema)
 

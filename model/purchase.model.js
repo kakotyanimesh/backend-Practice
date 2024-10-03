@@ -12,7 +12,7 @@ const PurchaseSchema = new Schema({
         type : ObjectId,
         ref : "Course"
     }
-})
+}, {timestamps : true})
 
 
 const PurchaseModel = mongoose.model('Purchase', PurchaseSchema)
